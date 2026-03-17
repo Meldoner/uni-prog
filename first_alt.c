@@ -64,37 +64,50 @@ void generate_variants(int N, int K, int bits_type, int precision, float range_a
 
             if (bits_type == FLOAT_SIZE) {
                 float num = (float)precise_num;
-                float restored;
-                machine_code_to_number(&num, sizeof(float), &restored);
-                double error = fabsl(precise_num - (double)restored);
 
-                fprintf(f_task,  "| %d | %.*Lf |\n", j, precision, precise_num);
-                fprintf(f_check, "| %d | %.*Lf | `", j, precision, precise_num);
+                // 
+                char buf[128];
+                snprintf(buf, sizeof(buf), "%.*f", precision, num);
+                float displayed;
+                sscanf(buf, "%f", &displayed);
+                double error = fabs((double)num - (double)displayed);
+
+                fprintf(f_task,  "| %d | %.*f |\n", j, precision, num);
+                fprintf(f_check, "| %d | %.*f | `", j, precision, num);
                 number_to_machine_code(&num, sizeof(float), f_check);
                 fprintf(f_check, "` | %.3e |\n", error);
 
             } else if (bits_type == DOUBLE_SIZE) {
                 double num = (double)precise_num;
-                double restored;
-                machine_code_to_number(&num, sizeof(double), &restored);
-                long double restored_ld = (long double)restored;
-                long double error = fabsl(precise_num - restored_ld);
 
-                fprintf(f_task,  "| %d | %.*Lf |\n", j, precision, precise_num);
-                fprintf(f_check, "| %d | %.*Lf | `", j, precision, precise_num);
+                // 
+                char buf[128];
+                snprintf(buf, sizeof(buf), "%.*f", precision, num);
+                double displayed;
+                sscanf(buf, "%lf", &displayed);
+                long double error = fabsl((long double)num - (long double)displayed);
+
+                fprintf(f_task,  "| %d | %.*f |\n", j, precision, num);
+                fprintf(f_check, "| %d | %.*f | `", j, precision, num);
                 number_to_machine_code(&num, sizeof(double), f_check);
                 fprintf(f_check, "` | %.3Le |\n", error);
 
             } else { // long double (80-bit x86, хранится в 16 байтах с паддингом)
-                long double num = (long double)precise_num;
+                long double num = precise_num;
                 long double restored;
                 machine_code_to_number(&num, sizeof(long double), &restored);
-                double error = fabsl(num - restored);
+
+                // 
+                char buf[128];
+                snprintf(buf, sizeof(buf), "%.*Lf", precision, num);
+                long double displayed;
+                sscanf(buf, "%Lf", &displayed);
+                long double error = fabsl(num - displayed);
 
                 fprintf(f_task,  "| %d | %.*Lf |\n", j, precision, num);
                 fprintf(f_check, "| %d | %.*Lf | `", j, precision, num);
                 number_to_machine_code(&num, sizeof(long double), f_check);
-                fprintf(f_check, "` | %.3e |\n", error);
+                fprintf(f_check, "` | %.3Le |\n", error);
             }
         }
 
